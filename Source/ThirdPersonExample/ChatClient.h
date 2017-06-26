@@ -26,5 +26,6 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void Connect();
 	
-	
+	UFUNCTION(BlueprintCallable)
+	void Send(const FString& text);
 };

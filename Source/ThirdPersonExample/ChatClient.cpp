@@ -27,6 +27,11 @@ void AChatClient::Tick(float DeltaTime)
 
 void AChatClient::Connect()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Some debug message!"));
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Want to connect."));
+}
+
+void AChatClient::Send(const FString & text)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Want to send: ") + text);
 }
 
