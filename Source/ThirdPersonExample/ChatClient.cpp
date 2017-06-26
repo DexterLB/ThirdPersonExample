@@ -33,5 +33,5 @@ void AChatClient::Connect()
 void AChatClient::Send(const FString & text)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Want to send: ") + text);
+	OnReceiveMessage.Broadcast("Me", text);
 }
-

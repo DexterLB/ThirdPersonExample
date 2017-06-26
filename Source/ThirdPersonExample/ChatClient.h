@@ -6,7 +6,10 @@
 #include "GameFramework/Actor.h"
 #include "ChatClient.generated.h"
 
-UCLASS()
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FReceivedMessageEvent, FString, From, FString, Text);
+
+UCLASS(BlueprintType, Blueprintable)
 class THIRDPERSONEXAMPLE_API AChatClient : public AActor
 {
 	GENERATED_BODY()
@@ -28,4 +31,9 @@ public:
 	
 	UFUNCTION(BlueprintCallable)
 	void Send(const FString& text);
+
+	
+	
+	UPROPERTY(BlueprintAssignable, meta = (DisplayName = "Message received"))
+	FReceivedMessageEvent OnReceiveMessage;
 };
