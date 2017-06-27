@@ -1,0 +1,23 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "ChatClient",
+	"Description": "IRC client",
+	"Category": "Other",
+	"CreatedBy": "dexterlb",
+	"CreatedByURL": "https://qtrp.tk",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": true,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "ChatClient",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	]
+}
