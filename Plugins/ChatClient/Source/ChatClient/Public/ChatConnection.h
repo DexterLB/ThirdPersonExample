@@ -13,5 +13,5 @@ public:
 	FChatConnection();
 	~FChatConnection();
 
-	void Connect(const FString& server);
+	void Connect(const FString& server, const FString& username, const FString& nick);
 };

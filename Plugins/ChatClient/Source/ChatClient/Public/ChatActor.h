@@ -38,6 +38,12 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	FString Server;
+
+	UPROPERTY(EditAnywhere)
+	FString Username;
+
+	UPROPERTY(EditAnywhere)
+	FString Nick;
 	
 	UPROPERTY(BlueprintAssignable, meta = (DisplayName = "Message received"))
 	FReceivedMessageEvent OnReceiveMessage;

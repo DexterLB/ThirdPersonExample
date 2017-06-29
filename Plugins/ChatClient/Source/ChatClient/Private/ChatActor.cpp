@@ -27,7 +27,7 @@ void AChatActor::Tick(float DeltaTime)
 
 void AChatActor::Connect()
 {
-	connection.Connect(Server);
+	connection.Connect(Server, Username, Nick);
 }
 
 void AChatActor::Send(const FString & text)
