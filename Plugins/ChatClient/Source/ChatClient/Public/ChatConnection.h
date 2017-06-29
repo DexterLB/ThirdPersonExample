@@ -15,6 +15,15 @@ public:
 
 	void Connect(const FString& server, const FString& username, const FString& nick);
 
+	void Update();
+
 private:
 	TSharedRef<FInternetAddr> ParseHost(const FString & host);
+
+	TUniquePtr<FSocket> Socket;
+
+	uint8 dataBuffer[256];
+	FString lineBuffer;
+
+	void processLine();
 };

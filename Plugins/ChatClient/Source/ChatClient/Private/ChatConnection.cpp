@@ -6,8 +6,11 @@
 #include "Sockets.h"
 #include "SocketSubsystem.h"
 
-FChatConnection::FChatConnection()
-{
+FChatConnection::FChatConnection() {
+	Socket = TUniquePtr<FSocket>(
+		ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)
+			->CreateSocket(NAME_Stream, TEXT("chat connection socket"), false)
+	);
 }
 
 FChatConnection::~FChatConnection()
@@ -19,8 +22,39 @@ void FChatConnection::Connect(const FString& server, const FString& username, co
 	// auto ss = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM);
 
 	auto ip = ParseHost(server);
-	
+
 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Want to connect to " + ip->ToString(true) + "."));
+
+	if (Socket->Connect(*ip)) {
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Connected!"));
+	} else {
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Well, shit."));
+	}
+}
+
+void FChatConnection::processLine() {
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Received line: " + lineBuffer));
+}
+
+void FChatConnection::Update() {
+	uint32 pendingSize;
+	int32 receivedSize;
+
+	if (Socket->HasPendingData(pendingSize)) {
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Have pending data"));
+		if (!Socket->Recv(dataBuffer, sizeof(dataBuffer), receivedSize, ESocketReceiveFlags::None)) {
+			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("unable to receive :("));
+			return;
+		}
+
+		for (int i = 0; i < receivedSize; i++) {
+			if (dataBuffer[i] == '\n') {
+				processLine();
+			} else {
+				lineBuffer.AppendChar(TCHAR(dataBuffer[i]));
+			}
+		}
+	}
 }
 
 TSharedRef<FInternetAddr> FChatConnection::ParseHost(const FString& host) {
