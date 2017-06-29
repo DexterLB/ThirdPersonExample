@@ -36,7 +36,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void Send(const FString& text);
 
-	
+	UPROPERTY(EditAnywhere)
+	FString Server;
 	
 	UPROPERTY(BlueprintAssignable, meta = (DisplayName = "Message received"))
 	FReceivedMessageEvent OnReceiveMessage;

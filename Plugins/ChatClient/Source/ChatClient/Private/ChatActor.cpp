@@ -27,7 +27,7 @@ void AChatActor::Tick(float DeltaTime)
 
 void AChatActor::Connect()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Want to connect."));
+	connection.Connect(Server);
 }
 
 void AChatActor::Send(const FString & text)

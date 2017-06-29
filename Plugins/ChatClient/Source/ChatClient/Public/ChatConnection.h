@@ -12,4 +12,6 @@ class CHATCLIENT_API FChatConnection
 public:
 	FChatConnection();
 	~FChatConnection();
+
+	void Connect(const FString& server);
 };
