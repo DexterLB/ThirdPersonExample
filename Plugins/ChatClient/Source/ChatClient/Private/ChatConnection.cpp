@@ -5,6 +5,7 @@
 #include "Networking.h"
 #include "Sockets.h"
 #include "SocketSubsystem.h"
+#include "IncomingPayload.h"
 
 FChatConnection::FChatConnection() {
 	Socket = TUniquePtr<FSocket>(
@@ -55,99 +56,12 @@ void FChatConnection::Command(FString command, const TArray<FString>& arguments)
 }
 
 void FChatConnection::processLine() {
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Cyan, TEXT("<- ") + lineBuffer);
+	auto payload = FIncomingPayload(lineBuffer);
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Cyan, TEXT("<- ") + payload.PrettyPrint());
 
-
-	// split payload
-
-	FString remainder;
-	FString prefix;
-	FString command;
-	FString argumentString;
-
-	if (
-		lineBuffer.StartsWith(TEXT(":"))
-		&& lineBuffer.Split(
-			" ", &prefix, &remainder
-		)) {
-
-		prefix.RemoveFromStart(TEXT(":"));
-	} else {
-		remainder = lineBuffer;
-	}
-
-	if (!remainder.Split(" ", &command, &argumentString)) {
-		command = remainder;
-	}
-
-	// split prefix
-
-	FString nick;
-	FString user;
-	FString host;
-
-	if (!prefix.Split("@", &remainder, &host)) {
-		remainder = prefix;
-	}
-
-	if (!remainder.Split("!", &nick, &user)) {
-		nick = remainder;
-	}
-
-	// split arguments
-	auto arguments = SplitArguments(argumentString);
-
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Cyan, FString(TEXT("<- ("))
-		+ "nick=" + nick + ", "
-		+ "user=" + user + ", "
-		+ "host=" + host + ", "
-		+ "command=" + command + ", "
-		+ "arguments=" + prettyFormatArguments(arguments) + ")"
-	);
 }
 
-TArray<FString> FChatConnection::SplitArguments(FString tosplit) {
-	TArray<FString> arguments;
-	if (tosplit.Len() == 0) {
-		return arguments;
-	}
 
-	if (tosplit.RemoveFromStart(":")) {
-		arguments.Add(tosplit);
-		return arguments;
-	}
-
-	FString left;
-	FString right;
-
-	while (tosplit.Split(" ", &left, &right)) {
-		arguments.Add(left);
-
-		if (right.RemoveFromStart(":")) {
-			arguments.Add(right);
-			return arguments;
-		}
-
-		tosplit = right;
-	}
-
-	return arguments;
-}
-
-FString FChatConnection::prettyFormatArguments(const TArray<FString>& arguments) {
-	FString s = "[";
-	int32 i = 0;
-	for (const FString& argument : arguments) {
-		s.Append(argument);
-		if (i < arguments.Num() - 1) {
-			s.Append(", ");
-		}
-		i++;
-	}
-	s.Append("]");
-
-	return s;
-}
 
 void FChatConnection::Update() {
 	uint32 pendingSize;
