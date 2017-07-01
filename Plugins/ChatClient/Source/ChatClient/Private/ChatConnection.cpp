@@ -33,8 +33,18 @@ void FChatConnection::Connect(const FString& server, const FString& username, co
 
 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Connected!"));
 
-	Command("NICK", { "blob" });
-	Command("USER", { "blob", "0", "*", "Blob" });
+	Command("NICK", { nick });
+	Command("USER", { username, "0", "*", username });
+
+	Join("#foo");
+}
+
+void FChatConnection::Join(const FString& channel, const FString& password) {
+	if (password.Len() > 0) {
+		Command("JOIN", { channel, password });
+	} else {
+		Command("JOIN", { channel });
+	}
 }
 
 void FChatConnection::Command(FString command, const TArray<FString>& arguments) {
@@ -59,6 +69,10 @@ void FChatConnection::processLine() {
 	auto payload = FIncomingPayload(lineBuffer);
 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Cyan, TEXT("<- ") + payload.PrettyPrint());
 
+	if (payload.command == "PING") {
+		Command("PONG", payload.arguments);
+		return;
+	}
 }
 
 
@@ -68,7 +82,6 @@ void FChatConnection::Update() {
 	int32 receivedSize;
 
 	if (Socket->HasPendingData(pendingSize)) {
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Have pending data"));
 		if (!Socket->Recv(dataBuffer, sizeof(dataBuffer), receivedSize, ESocketReceiveFlags::None)) {
 			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("unable to receive :("));
 			return;

@@ -15,6 +15,8 @@ public:
 
 	void Connect(const FString& server, const FString& username, const FString& nick);
 
+	void Join(const FString & channel, const FString & password = FString());
+
 
 	void Update();
 
