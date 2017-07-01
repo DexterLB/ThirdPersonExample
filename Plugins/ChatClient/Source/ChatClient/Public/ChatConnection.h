@@ -29,6 +29,10 @@ private:
 
 	void processLine();
 
+	TArray<FString> SplitArguments(FString tosplit);
+
+	FString prettyFormatArguments(const TArray<FString>& arguments);
+
 	void SendPayload(const FString & message);
 	void Command(FString command, const TArray<FString>& arguments);
 };
