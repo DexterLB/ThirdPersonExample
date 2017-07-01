@@ -8,7 +8,7 @@
 #include "ChatActor.generated.h"
 
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FReceivedMessageEvent, FString, From, FString, Text);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FReceivedMessageEvent, FString, From, FString, Channel, FString, Text);
 
 UCLASS(BlueprintType, Blueprintable)
 class CHATCLIENT_API AChatActor : public AActor
@@ -26,6 +26,8 @@ protected:
 private:
 	FChatConnection connection;
 
+	UFUNCTION()
+	void DispatchReceiveMessage(const FString& from, const FString& channel, const FString& message);
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

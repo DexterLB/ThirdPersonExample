@@ -15,11 +15,15 @@ public:
 
 	void Connect(const FString& server, const FString& username, const FString& nick);
 
+	void Send(const FString & target, const FString & text);
+
 	void Join(const FString & channel, const FString & password = FString());
 
 
 	void Update();
 
+	DECLARE_EVENT_ThreeParams(FChatConnection, FReceivedMessageEvent, const FString&, const FString&, const FString&);
+	FReceivedMessageEvent& OnReceivedMessage() { return ReceivedMessageEvent; };
 
 private:
 	TSharedRef<FInternetAddr> ParseHost(const FString & host);
@@ -37,4 +41,8 @@ private:
 
 	void SendPayload(const FString & message);
 	void Command(FString command, const TArray<FString>& arguments);
+
+	FReceivedMessageEvent ReceivedMessageEvent;
+
+	FString MyNick;
 };

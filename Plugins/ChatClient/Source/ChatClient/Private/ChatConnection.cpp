@@ -36,7 +36,12 @@ void FChatConnection::Connect(const FString& server, const FString& username, co
 	Command("NICK", { nick });
 	Command("USER", { username, "0", "*", username });
 
-	Join("#foo");
+	MyNick = nick;
+}
+
+void FChatConnection::Send(const FString& target, const FString& text) {
+	Command("PRIVMSG", { target, text });
+	ReceivedMessageEvent.Broadcast(MyNick, target, text);
 }
 
 void FChatConnection::Join(const FString& channel, const FString& password) {
@@ -72,6 +77,12 @@ void FChatConnection::processLine() {
 	if (payload.command == "PING") {
 		Command("PONG", payload.arguments);
 		return;
+	} else if (payload.command == "PRIVMSG" && payload.arguments.Num() > 1) {
+		const auto& from = payload.nick;
+		const auto& channel = payload.arguments[0];
+		const auto& message = payload.arguments[1];
+
+		ReceivedMessageEvent.Broadcast(from, channel, message);
 	}
 }
 
@@ -88,8 +99,10 @@ void FChatConnection::Update() {
 		}
 
 		for (int i = 0; i < receivedSize; i++) {
-			if (dataBuffer[i] == '\n') {
-				processLine();
+			if (dataBuffer[i] == '\n' || dataBuffer[i] == '\r') {
+				if (lineBuffer.Len() > 0) {
+					processLine();
+				}
 				lineBuffer = TEXT("");
 			} else {
 				lineBuffer.AppendChar(TCHAR(dataBuffer[i]));
