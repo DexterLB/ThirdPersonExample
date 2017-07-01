@@ -22,7 +22,7 @@ void AChatActor::BeginPlay()
 void AChatActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+	connection.Update();
 }
 
 void AChatActor::Connect()

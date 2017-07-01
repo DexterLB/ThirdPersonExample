@@ -15,7 +15,9 @@ public:
 
 	void Connect(const FString& server, const FString& username, const FString& nick);
 
+
 	void Update();
+
 
 private:
 	TSharedRef<FInternetAddr> ParseHost(const FString & host);
@@ -26,4 +28,7 @@ private:
 	FString lineBuffer;
 
 	void processLine();
+
+	void SendPayload(const FString & message);
+	void Command(FString command, const TArray<FString>& arguments);
 };

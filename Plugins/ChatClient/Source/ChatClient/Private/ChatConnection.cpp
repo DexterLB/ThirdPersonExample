@@ -25,15 +25,37 @@ void FChatConnection::Connect(const FString& server, const FString& username, co
 
 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Want to connect to " + ip->ToString(true) + "."));
 
-	if (Socket->Connect(*ip)) {
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Connected!"));
-	} else {
+	if (!Socket->Connect(*ip)) {
 		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Well, shit."));
+		return;
 	}
+
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Connected!"));
+
+	Command("NICK", { "blob" });
+	Command("USER", { "blob", "0", "*", "Blob" });
+}
+
+void FChatConnection::Command(FString command, const TArray<FString>& arguments) {
+	uint32 i = 0;
+	for (const auto& argument : arguments) {
+		if (i == arguments.Num() - 1) {
+			command += " :";
+		} else {
+			command += " ";
+		}
+		command += argument;
+		i++;
+	}
+
+	command.ReplaceInline(TEXT("\r"), TEXT(""));
+	command.ReplaceInline(TEXT("\n"), TEXT(""));
+
+	SendPayload(command);
 }
 
 void FChatConnection::processLine() {
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Received line: " + lineBuffer));
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Cyan, TEXT("<- ") + lineBuffer);
 }
 
 void FChatConnection::Update() {
@@ -50,10 +72,26 @@ void FChatConnection::Update() {
 		for (int i = 0; i < receivedSize; i++) {
 			if (dataBuffer[i] == '\n') {
 				processLine();
+				lineBuffer = TEXT("");
 			} else {
 				lineBuffer.AppendChar(TCHAR(dataBuffer[i]));
 			}
 		}
+	}
+}
+
+void FChatConnection::SendPayload(const FString& message) {
+
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, TEXT("-> ") + message);
+
+	FString data = message + "\r\n";
+	uint8* buffer = (uint8*)TCHAR_TO_UTF8(data.GetCharArray().GetData());
+	int32 size = data.Len();
+	int32 sent = 0;
+
+	if (!Socket->Send(buffer, size, sent) || sent != size) {
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("unable to send :("));
+		return;
 	}
 }
 
