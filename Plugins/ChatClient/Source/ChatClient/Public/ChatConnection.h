@@ -29,10 +29,13 @@ public:
 	void Perform(FString text);
 
 	void Join(const FString& channel, const FString& password = FString(), bool setDefault = true);
+	void Part(const FString& channel);
 
 	void SetDefaultChannel(const FString& channel);
 
 	void Update();
+
+	bool IsConnected();
 
 	DECLARE_EVENT_FourParams(
 		FChatConnection,

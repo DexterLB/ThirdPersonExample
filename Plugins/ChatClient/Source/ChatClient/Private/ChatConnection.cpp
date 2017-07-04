@@ -82,6 +82,13 @@ void FChatConnection::Join(const FString& channel, const FString& password, bool
 	}
 }
 
+void FChatConnection::Part(const FString& channel) {
+	Command("PART", { channel });
+	if (DefaultChannel == channel) {
+		SetDefaultChannel("");
+	}
+}
+
 void FChatConnection::SetDefaultChannel(const FString & channel)
 {
 	DefaultChannel = channel;
@@ -156,8 +163,12 @@ void FChatConnection::Update() {
 	}
 }
 
+bool FChatConnection::IsConnected() {
+	return (Socket->GetConnectionState() == ESocketConnectionState::SCS_Connected);
+}
+
 void FChatConnection::SendPayload(const FString& message) {
-	if (Socket->GetConnectionState() != ESocketConnectionState::SCS_Connected) {
+	if (!IsConnected()) {
 		UE_LOG(ChatClient, Error, TEXT("Socket not connected."));
 		return;
 	}
