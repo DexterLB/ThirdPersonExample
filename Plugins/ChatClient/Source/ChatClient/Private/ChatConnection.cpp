@@ -7,6 +7,8 @@
 #include "SocketSubsystem.h"
 #include "IncomingPayload.h"
 
+DEFINE_LOG_CATEGORY(ChatClient);
+
 FChatConnection::FChatConnection() {
 	Socket = TUniquePtr<FSocket>(
 		ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)
@@ -20,18 +22,16 @@ FChatConnection::~FChatConnection()
 
 
 void FChatConnection::Connect(const FString& server, const FString& username, const FString& nick) {
-	// auto ss = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM);
-
 	auto ip = ParseHost(server);
 
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Want to connect to " + ip->ToString(true) + "."));
+	UE_LOG(ChatClient, Display, TEXT("Want to connect to %s."), *ip->ToString(true));
 
 	if (!Socket->Connect(*ip)) {
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Well, shit."));
+		UE_LOG(ChatClient, Error, TEXT("Unable to connect to %s."), *ip->ToString(true));
 		return;
 	}
 
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Connected!"));
+	UE_LOG(ChatClient, Display, TEXT("Connected to %s!"), *ip->ToString(true));
 
 	Command("NICK", { nick });
 	Command("USER", { username, "0", "*", username });
@@ -39,17 +39,34 @@ void FChatConnection::Connect(const FString& server, const FString& username, co
 	MyNick = nick;
 }
 
-void FChatConnection::Send(const FString& target, const FString& text) {
+void FChatConnection::Send(const FString& text, FString target) {
+	if (target.Len() == 0) {
+		if (DefaultChannel.Len() == 0) {
+			UE_LOG(ChatClient, Error, TEXT("Trying to send message without default channel."));
+			return;
+		}
+		target = DefaultChannel;
+	}
+
 	Command("PRIVMSG", { target, text });
 	ReceivedMessageEvent.Broadcast(MyNick, target, text);
 }
 
-void FChatConnection::Join(const FString& channel, const FString& password) {
+void FChatConnection::Join(const FString& channel, const FString& password, bool setDefault) {
 	if (password.Len() > 0) {
 		Command("JOIN", { channel, password });
 	} else {
 		Command("JOIN", { channel });
 	}
+
+	if (setDefault) {
+		SetDefaultChannel(channel);
+	}
+}
+
+void FChatConnection::SetDefaultChannel(const FString & channel)
+{
+	DefaultChannel = channel;
 }
 
 void FChatConnection::Command(FString command, const TArray<FString>& arguments) {
@@ -72,7 +89,8 @@ void FChatConnection::Command(FString command, const TArray<FString>& arguments)
 
 void FChatConnection::processLine() {
 	auto payload = FIncomingPayload(lineBuffer);
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Cyan, TEXT("<- ") + payload.PrettyPrint());
+
+	UE_LOG(ChatClient, Verbose, TEXT("<- %s"), *payload.PrettyPrint());
 
 	if (payload.command == "PING") {
 		Command("PONG", payload.arguments);
@@ -84,6 +102,11 @@ void FChatConnection::processLine() {
 
 		ReceivedMessageEvent.Broadcast(from, channel, message);
 	}
+	else {
+		if (payload.arguments.Num() > 0) {
+			ReceivedMessageEvent.Broadcast(payload.nick, "<server>", payload.arguments.Last());
+		}
+	}
 }
 
 
@@ -94,7 +117,7 @@ void FChatConnection::Update() {
 
 	if (Socket->HasPendingData(pendingSize)) {
 		if (!Socket->Recv(dataBuffer, sizeof(dataBuffer), receivedSize, ESocketReceiveFlags::None)) {
-			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("unable to receive :("));
+			UE_LOG(ChatClient, Error, TEXT("Unable to receive data."));
 			return;
 		}
 
@@ -112,8 +135,12 @@ void FChatConnection::Update() {
 }
 
 void FChatConnection::SendPayload(const FString& message) {
+	if (Socket->GetConnectionState() != ESocketConnectionState::SCS_Connected) {
+		UE_LOG(ChatClient, Error, TEXT("Socket not connected."));
+		return;
+	}
 
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, TEXT("-> ") + message);
+	UE_LOG(ChatClient, Verbose, TEXT("-> %s"), *message);
 
 	FString data = message + "\r\n";
 	uint8* buffer = (uint8*)TCHAR_TO_UTF8(data.GetCharArray().GetData());
@@ -121,7 +148,7 @@ void FChatConnection::SendPayload(const FString& message) {
 	int32 sent = 0;
 
 	if (!Socket->Send(buffer, size, sent) || sent != size) {
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("unable to send :("));
+		UE_LOG(ChatClient, Error, TEXT("Unable to send data."));
 		return;
 	}
 }
@@ -144,7 +171,7 @@ TSharedRef<FInternetAddr> FChatConnection::ParseHost(const FString& host) {
 	auto err = ss->GetHostByName(TCHAR_TO_ANSI(*hostname), *ip);
 
 	if (err != ESocketErrors::SE_NO_ERROR) {
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("shit: " + FString::FromInt(err)));
+		UE_LOG(ChatClient, Error, TEXT("Unable to perform DNS lookup."));
 	}
 
 	ip->SetPort(port);

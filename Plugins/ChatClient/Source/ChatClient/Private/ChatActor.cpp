@@ -34,8 +34,7 @@ void AChatActor::Connect()
 
 void AChatActor::Send(const FString & text)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Want to send from plugin: ") + text);
-	connection.Send("#foo", text);
+	connection.Send(text);
 }
 
 void AChatActor::DispatchReceiveMessage(const FString& from, const FString& channel, const FString& message) {

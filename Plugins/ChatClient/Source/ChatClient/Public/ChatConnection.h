@@ -15,10 +15,11 @@ public:
 
 	void Connect(const FString& server, const FString& username, const FString& nick);
 
-	void Send(const FString & target, const FString & text);
+	void Send(const FString& text, FString target = TEXT(""));
 
-	void Join(const FString & channel, const FString & password = FString());
+	void Join(const FString& channel, const FString& password = FString(), bool setDefault = true);
 
+	void SetDefaultChannel(const FString& channel);
 
 	void Update();
 
@@ -45,4 +46,7 @@ private:
 	FReceivedMessageEvent ReceivedMessageEvent;
 
 	FString MyNick;
+	FString DefaultChannel;
 };
+
+DECLARE_LOG_CATEGORY_EXTERN(ChatClient, Log, All);
