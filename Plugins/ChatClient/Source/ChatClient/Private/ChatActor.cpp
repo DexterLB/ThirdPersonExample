@@ -32,11 +32,15 @@ void AChatActor::Connect()
 	connection.Join("#foo");
 }
 
-void AChatActor::Send(const FString & text)
+void AChatActor::Send(const FString& text, const FString& channel)
 {
-	connection.Send(text);
+	connection.Send(text, channel);
 }
 
-void AChatActor::DispatchReceiveMessage(const FString& from, const FString& channel, const FString& message) {
-	OnReceiveMessage.Broadcast(from, channel, message);
+void AChatActor::Perform(const FString& text) {
+	connection.Perform(text);
+}
+
+void AChatActor::DispatchReceiveMessage(const FString& from, const FString& channel, const FString& message, EChatMessageType type) {
+	OnReceiveMessage.Broadcast(from, channel, message, type);
 }

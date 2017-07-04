@@ -4,6 +4,15 @@
 
 #include "CoreMinimal.h"
 
+UENUM(BlueprintType)		//"BlueprintType" is essential to include
+enum class EChatMessageType : uint8
+{
+	Channel 	UMETA(DisplayName = "Channel"),
+	Private 	UMETA(DisplayName = "Private"),
+	System		UMETA(DisplayName = "System"),
+	Self		UMETA(DisplayName = "Myself")
+};
+
 /**
  * 
  */
@@ -17,13 +26,19 @@ public:
 
 	void Send(const FString& text, FString target = TEXT(""));
 
+	void Perform(FString text);
+
 	void Join(const FString& channel, const FString& password = FString(), bool setDefault = true);
 
 	void SetDefaultChannel(const FString& channel);
 
 	void Update();
 
-	DECLARE_EVENT_ThreeParams(FChatConnection, FReceivedMessageEvent, const FString&, const FString&, const FString&);
+	DECLARE_EVENT_FourParams(
+		FChatConnection,
+		FReceivedMessageEvent, 
+		const FString&, const FString&, const FString&, EChatMessageType
+	);
 	FReceivedMessageEvent& OnReceivedMessage() { return ReceivedMessageEvent; };
 
 private:

@@ -8,7 +8,7 @@
 #include "ChatActor.generated.h"
 
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FReceivedMessageEvent, FString, From, FString, Channel, FString, Text);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FReceivedMessageEvent, FString, From, FString, Channel, FString, Text, EChatMessageType, type);
 
 UCLASS(BlueprintType, Blueprintable)
 class CHATCLIENT_API AChatActor : public AActor
@@ -27,7 +27,7 @@ private:
 	FChatConnection connection;
 
 	UFUNCTION()
-	void DispatchReceiveMessage(const FString& from, const FString& channel, const FString& message);
+	void DispatchReceiveMessage(const FString& from, const FString& channel, const FString& message, EChatMessageType type);
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -36,7 +36,10 @@ public:
 	void Connect();
 	
 	UFUNCTION(BlueprintCallable)
-	void Send(const FString& text);
+	void Send(const FString& text, const FString& channel = TEXT(""));
+
+	UFUNCTION(BlueprintCallable)
+	void Perform(const FString& text);
 
 	UPROPERTY(EditAnywhere)
 	FString Server;

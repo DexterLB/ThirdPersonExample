@@ -49,7 +49,25 @@ void FChatConnection::Send(const FString& text, FString target) {
 	}
 
 	Command("PRIVMSG", { target, text });
-	ReceivedMessageEvent.Broadcast(MyNick, target, text);
+	ReceivedMessageEvent.Broadcast(MyNick, target, text, EChatMessageType::Self);
+}
+
+void FChatConnection::Perform(FString text) {
+	if (!text.RemoveFromStart("/")) {
+		Send(text);
+		return;
+	}
+
+	FString command;
+	FString argument;
+
+	text.Split(" ", &command, &argument);
+
+	if (command == "join") {
+		Join(argument);
+	} else {
+		UE_LOG(ChatClient, Error, TEXT("Unknown command: %s."), *command)
+	}
 }
 
 void FChatConnection::Join(const FString& channel, const FString& password, bool setDefault) {
@@ -100,11 +118,15 @@ void FChatConnection::processLine() {
 		const auto& channel = payload.arguments[0];
 		const auto& message = payload.arguments[1];
 
-		ReceivedMessageEvent.Broadcast(from, channel, message);
+		if (channel.Len() == 0 || channel == MyNick) {
+			ReceivedMessageEvent.Broadcast(from, "<private>", message, EChatMessageType::Private);
+		} else {
+			ReceivedMessageEvent.Broadcast(from, channel, message, EChatMessageType::Channel);
+		}
 	}
 	else {
 		if (payload.arguments.Num() > 0) {
-			ReceivedMessageEvent.Broadcast(payload.nick, "<server>", payload.arguments.Last());
+			ReceivedMessageEvent.Broadcast(payload.nick, "<server>", payload.arguments.Last(), EChatMessageType::System);
 		}
 	}
 }
