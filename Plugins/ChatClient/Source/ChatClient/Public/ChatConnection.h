@@ -22,20 +22,23 @@ public:
 	FChatConnection();
 	~FChatConnection();
 
-	void Connect(const FString& server, const FString& username, const FString& nick);
+	void Update();
 
-	void Send(const FString& text, FString target = TEXT(""));
+	void Connect(const FString& server, const FString& username, const FString& nick);
+	bool IsConnected() const;
+	void Disconnect();
 
 	void Perform(FString text);
 
+	void Send(const FString& text, FString target = TEXT(""));
 	void Join(const FString& channel, const FString& password = FString(), bool setDefault = true);
 	void Part(const FString& channel);
 
 	void SetDefaultChannel(const FString& channel);
 
-	void Update();
 
-	bool IsConnected();
+
+
 
 	DECLARE_EVENT_FourParams(
 		FChatConnection,
@@ -44,6 +47,17 @@ public:
 	);
 	FReceivedMessageEvent& OnReceivedMessage() { return ReceivedMessageEvent; };
 
+	DECLARE_EVENT(
+		FChatConnection,
+		FConnectedEvent
+	);
+	FConnectedEvent& OnConnected() { return ConnectedEvent; };
+
+	DECLARE_EVENT(
+		FChatConnection,
+		FDisconnectedEvent
+	);
+	FDisconnectedEvent& OnDisconnected() { return DisconnectedEvent; };
 private:
 	TSharedRef<FInternetAddr> ParseHost(const FString & host);
 
@@ -62,9 +76,15 @@ private:
 	void Command(FString command, const TArray<FString>& arguments);
 
 	FReceivedMessageEvent ReceivedMessageEvent;
+	FConnectedEvent ConnectedEvent;
+	FDisconnectedEvent DisconnectedEvent;
 
 	FString MyNick;
 	FString DefaultChannel;
+
+	bool Connected = false;
+	bool SocketConnected();
+	void UpdateConnectedState();
 };
 
 DECLARE_LOG_CATEGORY_EXTERN(ChatClient, Log, All);

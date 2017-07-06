@@ -36,6 +36,7 @@ void FChatConnection::Connect(const FString& server, const FString& username, co
 	Command("NICK", { nick });
 	Command("USER", { username, "0", "*", username });
 
+
 	MyNick = nick;
 }
 
@@ -89,6 +90,12 @@ void FChatConnection::Part(const FString& channel) {
 	}
 }
 
+void FChatConnection::Disconnect() {
+	Command("QUIT", {});
+	SetDefaultChannel("");
+	MyNick = "";
+}
+
 void FChatConnection::SetDefaultChannel(const FString & channel)
 {
 	DefaultChannel = channel;
@@ -121,9 +128,9 @@ void FChatConnection::processLine() {
 		Command("PONG", payload.arguments);
 		return;
 	} else if (payload.command == "PRIVMSG" && payload.arguments.Num() > 1) {
-		const auto& from = payload.nick;
-		const auto& channel = payload.arguments[0];
-		const auto& message = payload.arguments[1];
+		const FString& from = payload.nick;
+		const FString& channel = payload.arguments[0];
+		const FString& message = payload.arguments[1];
 
 		if (channel.Len() == 0 || channel == MyNick) {
 			ReceivedMessageEvent.Broadcast(from, "<private>", message, EChatMessageType::Private);
@@ -141,8 +148,15 @@ void FChatConnection::processLine() {
 
 
 void FChatConnection::Update() {
+	UpdateConnectedState();
+
+	if (!Connected) {
+		return;
+	}
+
 	uint32 pendingSize;
 	int32 receivedSize;
+	
 
 	if (Socket->HasPendingData(pendingSize)) {
 		if (!Socket->Recv(dataBuffer, sizeof(dataBuffer), receivedSize, ESocketReceiveFlags::None)) {
@@ -163,12 +177,32 @@ void FChatConnection::Update() {
 	}
 }
 
-bool FChatConnection::IsConnected() {
+void FChatConnection::UpdateConnectedState() {
+	if (SocketConnected()) {
+		if (!Connected) {
+			Connected = true;
+			UE_LOG(ChatClient, Display, TEXT("Connection established."));
+			ConnectedEvent.Broadcast();
+		}
+	} else {
+		if (Connected) {
+			Connected = false;
+			UE_LOG(ChatClient, Display, TEXT("Connection lost."));
+			DisconnectedEvent.Broadcast();
+		}
+	}
+}
+
+bool FChatConnection::SocketConnected() {
 	return (Socket->GetConnectionState() == ESocketConnectionState::SCS_Connected);
 }
 
+bool FChatConnection::IsConnected() const {
+	return Connected;
+}
+
 void FChatConnection::SendPayload(const FString& message) {
-	if (!IsConnected()) {
+	if (!SocketConnected()) {
 		UE_LOG(ChatClient, Error, TEXT("Socket not connected."));
 		return;
 	}
