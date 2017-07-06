@@ -42,11 +42,12 @@ public:
 	void Send(const FString& text, const FString& channel = TEXT(""));
 
 	/**
-	*  Send a message. The target can be either a channel or an username.
+	*  Send a message. If it begins with a slash, it is interpreted as a
+	*  command. Otherwise, it is sent to the default channel.
 	*/
 	UFUNCTION(BlueprintCallable)
 	void Perform(const FString& text);
-
+	
 	UPROPERTY(EditAnywhere)
 	FString Server;
 

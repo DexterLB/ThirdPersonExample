@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 
-UENUM(BlueprintType)		//"BlueprintType" is essential to include
+UENUM(BlueprintType)
 enum class EChatMessageType : uint8
 {
 	Channel 	UMETA(DisplayName = "Channel"),
@@ -14,7 +14,7 @@ enum class EChatMessageType : uint8
 };
 
 /**
- * 
+ *  Implements a connection to an IRC server.
  */
 class CHATCLIENT_API FChatConnection
 {
@@ -22,20 +22,48 @@ public:
 	FChatConnection();
 	~FChatConnection();
 
+	/**
+	*  Call this often. It polls the connection and executes
+	*  relevant actions.
+	*/
 	void Update();
-
+	
+	/**
+	*  Connects to an IRC server.
+	*  @param server Hostname to connect to
+	*  @param username Server-recogniseable username
+	*  @param nick Human-readable nick
+	*/
 	void Connect(const FString& server, const FString& username, const FString& nick);
 	bool IsConnected() const;
 	void Disconnect();
 
+	/**
+	*  Send a message. If it begins with a slash, it is interpreted as a
+	*  command. Otherwise, it is sent to the default channel.
+	*/
 	void Perform(FString text);
 
+	/**
+	*  Send a message. The target can be either a channel or an username.
+	*/
 	void Send(const FString& text, FString target = TEXT(""));
+
+	/**
+	*  Join a channel.
+	*  @param setDefault Determines whether the channel will become default after joining.
+	*/
 	void Join(const FString& channel, const FString& password = FString(), bool setDefault = true);
+	
+	/**
+	*  Part (leave) a channel.
+	*/
 	void Part(const FString& channel);
 
+	/**
+	*  Set the default channel. Messages without target will be sent to it.
+	*/
 	void SetDefaultChannel(const FString& channel);
-
 
 
 
@@ -45,6 +73,9 @@ public:
 		FReceivedMessageEvent, 
 		const FString&, const FString&, const FString&, EChatMessageType
 	);
+	/**
+	*  Triggered upon receiving any message.
+	*/
 	FReceivedMessageEvent& OnReceivedMessage() { return ReceivedMessageEvent; };
 
 	DECLARE_EVENT(
