@@ -29,12 +29,21 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	/**
+	*  Connect to the server
+	*/
 	UFUNCTION(BlueprintCallable)
 	void Connect();
 	
+	/**
+	*  Send a message. The target can be either a channel or an username.
+	*/
 	UFUNCTION(BlueprintCallable)
 	void Send(const FString& text, const FString& channel = TEXT(""));
 
+	/**
+	*  Send a message. The target can be either a channel or an username.
+	*/
 	UFUNCTION(BlueprintCallable)
 	void Perform(const FString& text);
 
